@@ -1,0 +1,11 @@
+fastapi
+uvicorn[standard]
+pandas
+tqdm
+httpx
+pytest
+pytest-asyncio
+python-multipart
+jinja2
+pydantic
+sqlalchemy

@@ -1,0 +1,237 @@
+{
+  "tables": {
+    "dim_location": {
+      "columns": [
+        "location_sk",
+        "pos_system",
+        "pos_location_id",
+        "location_code",
+        "location_name",
+        "address_line1",
+        "city",
+        "state",
+        "postal_code",
+        "phone_number",
+        "created_at",
+        "updated_at"
+      ],
+      "types": {
+        "location_sk": "integer",
+        "pos_system": "string",
+        "pos_location_id": "string",
+        "location_code": "string",
+        "location_name": "string",
+        "address_line1": "string",
+        "city": "string",
+        "state": "string",
+        "postal_code": "string",
+        "phone_number": "string",
+        "created_at": "timestamp",
+        "updated_at": "timestamp"
+      },
+      "metadata": {
+        "primary_key": ["location_sk"],
+        "unique_keys": [["pos_system", "pos_location_id"]],
+        "indexes": [["location_code"]],
+        "description": "One row per physical laundromat location across all POS systems."
+      }
+    },
+    "dim_customer": {
+      "columns": [
+        "customer_sk",
+        "pos_system",
+        "pos_customer_id",
+        "customer_guid",
+        "first_name",
+        "last_name",
+        "email",
+        "is_email_valid",
+        "phone_number",
+        "address_line1",
+        "city",
+        "state",
+        "postal_code",
+        "is_active",
+        "created_at",
+        "updated_at"
+      ],
+      "types": {
+        "customer_sk": "integer",
+        "pos_system": "string",
+        "pos_customer_id": "string",
+        "customer_guid": "string",
+        "first_name": "string",
+        "last_name": "string",
+        "email": "string",
+        "is_email_valid": "boolean",
+        "phone_number": "string",
+        "address_line1": "string",
+        "city": "string",
+        "state": "string",
+        "postal_code": "string",
+        "is_active": "boolean",
+        "created_at": "timestamp",
+        "updated_at": "timestamp"
+      },
+      "metadata": {
+        "primary_key": ["customer_sk"],
+        "unique_keys": [["pos_system", "pos_customer_id"]],
+        "indexes": [["email"]],
+        "description": "Customer dimension unified across all POS systems."
+      }
+    },
+    "dim_service": {
+      "columns": [
+        "service_sk",
+        "pos_system",
+        "pos_service_id",
+        "service_code",
+        "service_name",
+        "service_category",
+        "base_price",
+        "is_active",
+        "created_at",
+        "updated_at"
+      ],
+      "types": {
+        "service_sk": "integer",
+        "pos_system": "string",
+        "pos_service_id": "string",
+        "service_code": "string",
+        "service_name": "string",
+        "service_category": "string",
+        "base_price": "numeric",
+        "is_active": "boolean",
+        "created_at": "timestamp",
+        "updated_at": "timestamp"
+      },
+      "metadata": {
+        "primary_key": ["service_sk"],
+        "unique_keys": [["pos_system", "pos_service_id"]],
+        "indexes": [["service_name"]],
+        "description": "Service definitions (wash, dry, etc.) across all POS systems."
+      }
+    },
+    "dim_membership_tier": {
+      "columns": [
+        "membership_tier_sk",
+        "pos_system",
+        "tier_name",
+        "tier_description"
+      ],
+      "types": {
+        "membership_tier_sk": "integer",
+        "pos_system": "string",
+        "tier_name": "string",
+        "tier_description": "string"
+      },
+      "metadata": {
+        "primary_key": ["membership_tier_sk"],
+        "description": "Membership tiers from POS systems; includes canonical 'None' tier."
+      }
+    },
+    "dim_payment_type": {
+      "columns": [
+        "payment_type_sk",
+        "pos_system",
+        "pos_payment_type_id",
+        "payment_type_name"
+      ],
+      "types": {
+        "payment_type_sk": "integer",
+        "pos_system": "string",
+        "pos_payment_type_id": "string",
+        "payment_type_name": "string"
+      },
+      "metadata": {
+        "primary_key": ["payment_type_sk"],
+        "description": "Payment type dimension (credit card, cash, etc.)."
+      }
+    },
+    "fact_transaction_header": {
+      "columns": [
+        "transaction_header_sk",
+        "pos_system",
+        "pos_transaction_id",
+        "location_sk",
+        "customer_sk",
+        "membership_tier_sk",
+        "payment_type_sk",
+        "transaction_ts",
+        "business_date",
+        "subtotal_amount",
+        "tax_amount",
+        "discount_amount",
+        "total_amount",
+        "is_date_imputed",
+        "source_row_count"
+      ],
+      "types": {
+        "transaction_header_sk": "integer",
+        "pos_system": "string",
+        "pos_transaction_id": "string",
+        "location_sk": "integer",
+        "customer_sk": "integer",
+        "membership_tier_sk": "integer",
+        "payment_type_sk": "integer",
+        "transaction_ts": "timestamp",
+        "business_date": "date",
+        "subtotal_amount": "numeric",
+        "tax_amount": "numeric",
+        "discount_amount": "numeric",
+        "total_amount": "numeric",
+        "is_date_imputed": "boolean",
+        "source_row_count": "integer"
+      },
+      "metadata": {
+        "primary_key": ["transaction_header_sk"],
+        "unique_keys": [
+          ["pos_system", "pos_transaction_id"]
+        ],
+      "foreign_keys": [
+        ["location_sk", "dim_location", "location_sk"],
+        ["customer_sk", "dim_customer", "customer_sk"],
+        ["membership_tier_sk", "dim_membership_tier", "membership_tier_sk"],
+        ["payment_type_sk", "dim_payment_type", "payment_type_sk"]
+      ],
+      "indexes": [
+        ["location_sk"],
+        ["customer_sk"],
+        ["business_date"]
+      ],
+      "description": "One row per transaction receipt across all POS systems."
+      }
+    },
+    "fact_transaction_line_item": {
+      "columns": [
+        "transaction_line_sk",
+        "transaction_header_sk",
+        "service_sk",
+        "quantity",
+        "unit_price",
+        "line_amount",
+        "created_at"
+      ],
+      "types": {
+        "transaction_line_sk": "integer",
+        "transaction_header_sk": "integer",
+        "service_sk": "integer",
+        "quantity": "numeric",
+        "unit_price": "numeric",
+        "line_amount": "numeric",
+        "created_at": "timestamp"
+      },
+      "metadata": {
+        "primary_key": ["transaction_line_sk"],
+        "foreign_keys": [
+          ["transaction_header_sk", "fact_transaction_header", "transaction_header_sk"],
+          ["service_sk", "dim_service", "service_sk"]
+        ],
+        "indexes": [
+          ["service_sk"]
+        ],
+        "description": "Service-level line items for each transaction."
+      }
+    }
+  }
+}
